@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import pandas as pd
-from sklearn.model_selection import train_test_split
+import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 from scipy.spatial import distance
 
 
@@ -89,13 +91,37 @@ def scatter_plot(data):
     plt.show()
 
 
+def knn_classifier(train_data, train_labels, test_data, k):
+    predictions = []
+    
+    for test_point in test_data:
+        distances = [np.sqrt(np.sum((train_point - test_point) ** 2)) for train_point in train_data]
+        
+        k_indices = np.argsort(distances)[:k]
+        
+        k_nearest_labels = [train_labels[i] for i in k_indices]
+        
+        prediction = np.bincount(k_nearest_labels).argmax()
+        predictions.append(prediction)
+    
+    return predictions
+
+
 def KNN(data, k=3):
     x = data[['sepal_length','sepal_width','petal_length','petal_width']]
     y = data['label']
 
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=1)
-
+    feature_combinations = [[0], [1], [2], [3], [0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3],[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3], [0, 1, 2, 3]]
     
+    for features in feature_combinations:
+        selected_features = x.iloc[:, features] 
+        
+        x_train, x_test, y_train, y_test = train_test_split(selected_features, y, test_size=0.5, random_state=87)
+
+        predictions = knn_classifier(x_train, y_train, x_test, k)
+        accuracy = accuracy_score(y_test, predictions)
+        print(accuracy)
+
 
 
     CR_table = {"Combinations":['1. Sepal Length only', 
