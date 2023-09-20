@@ -153,8 +153,7 @@ def KNN(data, k=3):
                           '13. Sepal Length + Petal Length + Petal Width',
                           '14. sepal Width + Petal Length + Petal Width',
                           '15. Sepal Length + Sepal Width + Petal Length + Petal Width'],
-          "Classification Rate": accuracy_format,
-           }
+                "Classification Rate": accuracy_format,}
     
     df = pd.DataFrame(CR_table)
 
@@ -177,8 +176,7 @@ def main():
         1: "sepal_width",
         2: "petal_length",
         3: "petal_width",
-        4: "label"
-    })
+        4: "label"})
 
     #print(data)
     scatter_plot(data)
@@ -189,6 +187,6 @@ if __name__ == '__main__':
     main()
 
 """
-@author: OU,TING-WEI
-Machien Learning HW1
+@author: OU,TING-WEI @ M.S. in Robotics 
+Machien Learning HW1 ( NYCU FALL-2023 )
 """
