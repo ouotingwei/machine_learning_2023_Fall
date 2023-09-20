@@ -112,17 +112,31 @@ def KNN(data, k=3):
     y = data['label']
 
     feature_combinations = [[0], [1], [2], [3], [0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3],[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3], [0, 1, 2, 3]]
-    
+    accuracy_list_1 = []
+    accuracy_list_2 = []
+    accuracy_avg = []
+
     for features in feature_combinations:
         selected_features = x.iloc[:, features] 
         
         x_train, x_test, y_train, y_test = train_test_split(selected_features, y, test_size=0.5, random_state=87)
+        x_train = x_train.to_numpy()
+        x_test = x_test.to_numpy()
+        y_train = y_train.to_numpy()
+        y_test = y_test.to_numpy()
 
-        predictions = knn_classifier(x_train, y_train, x_test, k)
-        accuracy = accuracy_score(y_test, predictions)
-        print(accuracy)
+        predictions_1 = knn_classifier(x_train, y_train, x_test, k)
+        prediction_2 = knn_classifier(x_test, y_test, x_train, k)
 
+        accuracy_1 = 100*accuracy_score(y_test, predictions_1)
+        accuracy_2 = 100*accuracy_score(y_train, prediction_2)
 
+        accuracy_list_1.append(accuracy_1)
+        accuracy_list_2.append(accuracy_2)
+        accuracy_avg.append((accuracy_1+accuracy_2)/2)
+
+    
+    accuracy_format = ["{:.2f}".format(accuracy) for accuracy in accuracy_avg]
 
     CR_table = {"Combinations":['1. Sepal Length only', 
                           '2. Sepal Width only', 
@@ -139,7 +153,7 @@ def KNN(data, k=3):
                           '13. Sepal Length + Petal Length + Petal Width',
                           '14. sepal Width + Petal Length + Petal Width',
                           '15. Sepal Length + Sepal Width + Petal Length + Petal Width'],
-          "Classification Rate":[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+          "Classification Rate": accuracy_format,
            }
     
     df = pd.DataFrame(CR_table)
@@ -166,8 +180,8 @@ def main():
         4: "label"
     })
 
-    print(data)
-    #scatter_plot(data)
+    #print(data)
+    scatter_plot(data)
     KNN(data, k=3)
 
 
