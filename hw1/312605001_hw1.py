@@ -20,12 +20,12 @@ def scatter_plot(data):
         color, marker = label_color_map[label]
         plt.scatter(x1[i], y1[i], color=color, marker=marker, label=f'Label {label}')
 
-    plt.title('sepal_width v.s sepal_length')
+    plt.title('1. sepal_width v.s sepal_length')
     plt.xlabel('sepal_width')
     plt.ylabel('sepal_length')
     plt.show()
 
-    # plot 2. sepal_width v.s. petal_length
+    # plot 2. petal_width v.s. petal_length
     x2 = data['petal_width']
     y2 = data['petal_length']
     for i in range(len(data)):
@@ -33,7 +33,7 @@ def scatter_plot(data):
         color, marker = label_color_map[label]
         plt.scatter(x2[i], y2[i], color=color, marker=marker, label=f'Label {label}')
 
-    plt.title('sepal_width v.s. petal_length')
+    plt.title('2. petal_width v.s. petal_length')
     plt.xlabel('petal_width')
     plt.ylabel('petal_length')
     plt.show()
@@ -46,7 +46,7 @@ def scatter_plot(data):
         color, marker = label_color_map[label]
         plt.scatter(x3[i], y3[i], color=color, marker=marker, label=f'Label {label}')
 
-    plt.title('petal_width v.s sepal_length')
+    plt.title('3. petal_width v.s sepal_length')
     plt.xlabel('sepal_length')
     plt.ylabel('petal_width')
     plt.show()
@@ -59,7 +59,7 @@ def scatter_plot(data):
         color, marker = label_color_map[label]
         plt.scatter(x4[i], y4[i], color=color, marker=marker, label=f'Label {label}')
 
-    plt.title('sepal_width v.s. petal_length')
+    plt.title('4. sepal_width v.s. petal_length')
     plt.xlabel('sepal_width')
     plt.ylabel('petal_length')
     plt.show()
@@ -72,7 +72,7 @@ def scatter_plot(data):
         color, marker = label_color_map[label]
         plt.scatter(x4[i], y4[i], color=color, marker=marker, label=f'Label {label}')
 
-    plt.title('sepal_length v.s. petal_length')
+    plt.title('5. sepal_length v.s. petal_length')
     plt.xlabel('sepal_length')
     plt.ylabel('petal_length')
     plt.show()
@@ -85,7 +85,7 @@ def scatter_plot(data):
         color, marker = label_color_map[label]
         plt.scatter(x4[i], y4[i], color=color, marker=marker, label=f'Label {label}')
 
-    plt.title('sepal_width v.s. petal_width')
+    plt.title('6. sepal_width v.s. petal_width')
     plt.xlabel('sepal_width')
     plt.ylabel('petal_width')
     plt.show()
