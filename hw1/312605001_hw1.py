@@ -179,7 +179,7 @@ def main():
         4: "label"})
 
     #print(data)
-    scatter_plot(data)
+    #scatter_plot(data)
     KNN(data, k=3)
 
 
