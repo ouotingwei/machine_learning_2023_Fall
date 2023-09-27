@@ -5,8 +5,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
-from scipy.spatial import distance
+# from sklearn.model_selection import train_test_split
+# from scipy.spatial import distance
 
 
 def scatter_plot(data):
@@ -195,8 +195,7 @@ def main():
         4: "label"})
 
     #print(data)
-    #scatter_plot(data)
-
+    scatter_plot(data)
     KNN(data, k=3)
 
 
