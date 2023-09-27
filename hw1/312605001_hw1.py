@@ -118,12 +118,28 @@ def KNN(data, k=3):
 
     for features in feature_combinations:
         selected_features = x.iloc[:, features] 
+        selected_features = selected_features.to_numpy()
         
-        x_train, x_test, y_train, y_test = train_test_split(selected_features, y, test_size=0.5, random_state=87)
-        x_train = x_train.to_numpy()
-        x_test = x_test.to_numpy()
-        y_train = y_train.to_numpy()
-        y_test = y_test.to_numpy()
+        # x_train, x_test, y_train, y_test = train_test_split(selected_features, y, test_size=0.5, random_state=87)
+        # x_train = x_train.to_numpy()
+        # x_test = x_test.to_numpy()
+        # y_train = y_train.to_numpy()
+        # y_test = y_test.to_numpy()
+
+        # Initialize as empty numpy arrays
+        x_train = np.empty((0, selected_features.shape[1]))
+        x_test = np.empty((0, selected_features.shape[1]))
+        y_train = np.empty((0,))
+        y_test = np.empty((0,))
+
+        # append_train_data
+        x_train = np.concatenate((x_train, selected_features[0:24], selected_features[50:74], selected_features[100:124]), axis=0)
+        y_train = np.concatenate((y_train, y[0:24], y[50:74], y[100:124]), axis=0)
+
+        # append_test_data
+        x_test = np.concatenate((x_test, selected_features[25:49], selected_features[75:99], selected_features[125:149]), axis=0)
+        y_test = np.concatenate((y_test, y[25:49], y[75:99], y[125:149]), axis=0)
+
 
         predictions_1 = knn_classifier(x_train, y_train, x_test, k)
         prediction_2 = knn_classifier(x_test, y_test, x_train, k)
@@ -180,6 +196,7 @@ def main():
 
     #print(data)
     #scatter_plot(data)
+
     KNN(data, k=3)
 
 
