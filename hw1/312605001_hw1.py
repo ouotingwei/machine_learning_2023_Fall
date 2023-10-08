@@ -97,11 +97,16 @@ def knn_classifier(train_data, train_labels, test_data, k):
     for test_point in test_data:
         distances = [np.sqrt(np.sum((train_point - test_point) ** 2)) for train_point in train_data]
         
-        k_indices = np.argsort(distances)[:k]
+        k_indices = np.argsort(distances)
+        k_nearest_labels = [train_labels[i] for i in k_indices[:k]]
         
-        k_nearest_labels = [train_labels[i] for i in k_indices]
+        same_distance_count = k_nearest_labels.count(k_nearest_labels[0])
         
-        prediction = np.bincount(k_nearest_labels).argmax()
+        if same_distance_count > k:
+            prediction = np.bincount(k_nearest_labels[:same_distance_count]).argmax()
+        else:
+            prediction = np.bincount(k_nearest_labels).argmax()
+        
         predictions.append(prediction)
     
     return predictions
@@ -194,8 +199,8 @@ def main():
         3: "petal_width",
         4: "label"})
 
-    #print(data)
-    scatter_plot(data)
+    # print(data)
+    # scatter_plot(data)
     KNN(data, k=3)
 
 
