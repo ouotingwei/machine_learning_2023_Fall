@@ -11,16 +11,17 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
 class LDA():
-    def __init__(self,):
+    def __init__(self, feature_columns):
         self.mean_class_1 = None
         self.mean_class_2 = None
         self.covariance = None
         self.C1 = 1
         self.C2 = 1
     
-        self.w_T = None
-        self.b = None
+        self.w_T = np.zeros(len(feature_columns))
+        self.b = 0
     
+
     def fit(self, x, y):
         class_1 = x[y == 1]
         class_2 = x[y == 0]
@@ -41,13 +42,31 @@ class LDA():
         w_T = (self.mean_class_1 - self.mean_class_2).T @ np.linalg.inv(covariance)
         b = -0.5 * w_T @ (self.mean_class_1 + self.mean_class_2) - np.log((self.C1 * p2) / (self.C2 * p1))
 
+        w_T = np.round(w_T, 2)
+        b = round(b, 2)
 
-    
-
+        print('[!] training weight vector : ', w_T, ' training bias : ', b)
         
 
+    def LDA_decision_function(self, x, y_true, feature_columns):
+        correct_predictions = 0
 
-def two_fold_cross_variation(data):
+        for i in range(len(x)):
+            features = x[feature_columns].iloc[i]
+            
+            g = np.dot(features, self.w_T) + self.b
+            predicted_class = 1 if g > 0 else 0
+
+            if predicted_class == y_true[i]:
+                correct_predictions += 1
+
+        accuracy = correct_predictions / len(y_true)
+
+        print(accuracy)
+
+
+def two_fold_cross_variation(data, feature_columns):
+
     # positive class = Versicolor  /  negative class = Virginica
     positive_class = 1
     negative_class = 2
@@ -67,10 +86,12 @@ def two_fold_cross_variation(data):
     x_test = testing_data
     y_test = np.concatenate((np.ones(25), np.zeros(25)))
 
-    lda = LDA()
-    lda.fit(x_train, y_train)
-    
+    lda = LDA(feature_columns)
 
+    lda.fit(x_train, y_train)
+    lda.LDA_decision_function(x_test, y_test, feature_columns)
+
+    
 def main():
     data = pd.read_csv('iris.txt', delim_whitespace=True, header=None, engine='python')
     data = data.rename(columns={
@@ -79,9 +100,11 @@ def main():
         2: "petal_length",
         3: "petal_width",
         4: "label"})
+    
+    feature_columns = ['petal_length', 'petal_width']
 
-    two_fold_cross_variation(data)
+    two_fold_cross_variation(data, feature_columns)
+
 
 if __name__ == '__main__':
     main()
-
