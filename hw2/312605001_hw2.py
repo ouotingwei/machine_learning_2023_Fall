@@ -11,15 +11,15 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
 class LDA():
-    def __init__(self, feature_columns):
+    def __init__(self):
         self.mean_class_1 = None
         self.mean_class_2 = None
         self.covariance = None
         self.C1 = 1
         self.C2 = 1
     
-        self.w_T = np.zeros(len(feature_columns))
-        self.b = 0
+        self.w_T = None
+        self.b = None
     
 
     def fit(self, x, y):
@@ -39,33 +39,36 @@ class LDA():
         covariance_2 = np.cov(class_2, rowvar=False)
         covariance = covariance_1*p1 + covariance_2*p2
 
-        w_T = (self.mean_class_1 - self.mean_class_2).T @ np.linalg.inv(covariance)
-        b = -0.5 * w_T @ (self.mean_class_1 + self.mean_class_2) - np.log((self.C1 * p2) / (self.C2 * p1))
+        self.w_T = (self.mean_class_1 - self.mean_class_2).T @ np.linalg.inv(covariance)
+        self.b = -0.5 * self.w_T @ (self.mean_class_1 + self.mean_class_2) - np.log((self.C1 * p2) / (self.C2 * p1))
 
-        w_T = np.round(w_T, 2)
-        b = round(b, 2)
+        self.w_T = np.round(self.w_T, 2)
+        self.b = round(self.b, 2)
 
-        print('[!] training weight vector : ', w_T, ' training bias : ', b)
+        print('[!] training weight vector : ', self.w_T, ' training bias : ', self.b)
         
 
-    def LDA_decision_function(self, x, y_true, feature_columns):
+    def LDA_decision_function(self, x, y_true):
         correct_predictions = 0
 
+        x = np.array(x)
+
         for i in range(len(x)):
-            features = x[feature_columns].iloc[i]
-            
-            g = np.dot(features, self.w_T) + self.b
+            x_col = np.array([[x[i][0], x[i][1]]]).T
+
+            g = self.w_T @ x_col + self.b
             predicted_class = 1 if g > 0 else 0
 
             if predicted_class == y_true[i]:
                 correct_predictions += 1
+                print(i)
 
         accuracy = correct_predictions / len(y_true)
 
         print(accuracy)
 
 
-def two_fold_cross_variation(data, feature_columns):
+def two_fold_cross_variation(data):
 
     # positive class = Versicolor  /  negative class = Virginica
     positive_class = 1
@@ -86,10 +89,14 @@ def two_fold_cross_variation(data, feature_columns):
     x_test = testing_data
     y_test = np.concatenate((np.ones(25), np.zeros(25)))
 
-    lda = LDA(feature_columns)
+    lda = LDA()
 
     lda.fit(x_train, y_train)
-    lda.LDA_decision_function(x_test, y_test, feature_columns)
+    lda.LDA_decision_function(x_test, y_test)
+    print('--------------------------------')
+    
+    lda.fit(x_test, y_test)
+    lda.LDA_decision_function(x_train, y_train)
 
     
 def main():
@@ -100,10 +107,8 @@ def main():
         2: "petal_length",
         3: "petal_width",
         4: "label"})
-    
-    feature_columns = ['petal_length', 'petal_width']
 
-    two_fold_cross_variation(data, feature_columns)
+    two_fold_cross_variation(data)
 
 
 if __name__ == '__main__':
