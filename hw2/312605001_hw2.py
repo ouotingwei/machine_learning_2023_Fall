@@ -3,7 +3,6 @@
 date : 10-8-2023
 Machien Learning HW2 ( NYCU FALL-2023 )
 """
-
 import pandas as pd
 import numpy as np
 import math
@@ -14,13 +13,12 @@ class LDA():
     def __init__(self):
         self.mean_class_1 = None
         self.mean_class_2 = None
-        self.covariance = None
         self.C1 = 1
         self.C2 = 1
-    
+
         self.w_T = None
         self.b = None
-    
+
 
     def fit(self, x, y):
         class_1 = x[y == 1]
@@ -45,12 +43,11 @@ class LDA():
         self.w_T = np.round(self.w_T, 2)
         self.b = round(self.b, 2)
 
-        print('[!] training weight vector : ', self.w_T, ' training bias : ', self.b)
+        return self.w_T, self.b
         
 
     def LDA_decision_function(self, x, y_true):
         correct_predictions = 0
-
         x = np.array(x)
 
         for i in range(len(x)):
@@ -61,18 +58,17 @@ class LDA():
 
             if predicted_class == y_true[i]:
                 correct_predictions += 1
-                print(i)
 
         accuracy = correct_predictions / len(y_true)
 
-        print(accuracy)
+        return accuracy
 
 
-def two_fold_cross_variation(data):
+def two_fold_cross_variation_lda(data):
 
     # positive class = Versicolor  /  negative class = Virginica
-    positive_class = 1
-    negative_class = 2
+    positive_class = 2
+    negative_class = 3
 
     # adopt the third and forth typees of features
     selected_features = data[['petal_length', 'petal_width']]
@@ -91,14 +87,19 @@ def two_fold_cross_variation(data):
 
     lda = LDA()
 
-    lda.fit(x_train, y_train)
-    lda.LDA_decision_function(x_test, y_test)
-    print('--------------------------------')
-    
-    lda.fit(x_test, y_test)
-    lda.LDA_decision_function(x_train, y_train)
+    training_w, training_b = lda.fit(x_train, y_train)
+    testing_accuracy = (lda.LDA_decision_function(x_test, y_test))*100
 
-    
+    testing_w, testing_b = lda.fit(x_test, y_test)
+    training_accuracy = (lda.LDA_decision_function(x_train, y_train))*100
+
+    average_accuracy = (testing_accuracy + training_accuracy) / 2
+
+    print('training w = ', training_w, 'training b = ', training_b,'testing accuracy', testing_accuracy, '%')
+    print('testing w = ', testing_w, 'testing b = ', testing_b,'training accuracy', training_accuracy, '%')
+    print('average accuracy = ', average_accuracy, '%')
+
+
 def main():
     data = pd.read_csv('iris.txt', delim_whitespace=True, header=None, engine='python')
     data = data.rename(columns={
@@ -108,7 +109,7 @@ def main():
         3: "petal_width",
         4: "label"})
 
-    two_fold_cross_variation(data)
+    two_fold_cross_variation_lda(data)
 
 
 if __name__ == '__main__':
