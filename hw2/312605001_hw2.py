@@ -6,6 +6,9 @@ Machien Learning HW2 ( NYCU FALL-2023 )
 import pandas as pd
 import numpy as np
 import math
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
+
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
@@ -51,7 +54,7 @@ class LDA():
         x = np.array(x)
 
         for i in range(len(x)):
-            x_col = np.array([[x[i][0], x[i][1]]]).T
+            x_col = x[i].T
 
             g = self.w_T @ x_col + self.b
             predicted_class = 1 if g > 0 else 0
@@ -64,14 +67,9 @@ class LDA():
         return accuracy
 
 
-def two_fold_cross_variation_lda(data):
-
-    # positive class = Versicolor  /  negative class = Virginica
-    positive_class = 2
-    negative_class = 3
+def two_fold_cross_variation_lda(data, selected_features, positive_class, negative_class):
 
     # adopt the third and forth typees of features
-    selected_features = data[['petal_length', 'petal_width']]
     positive_data = selected_features[data['label'] == positive_class]
     negative_data = selected_features[data['label'] == negative_class]
 
@@ -99,6 +97,8 @@ def two_fold_cross_variation_lda(data):
     print('testing w = ', testing_w, 'testing b = ', testing_b,'training accuracy', training_accuracy, '%')
     print('average accuracy = ', average_accuracy, '%')
 
+# def ROC_AND_AUC():
+
 
 def main():
     data = pd.read_csv('iris.txt', delim_whitespace=True, header=None, engine='python')
@@ -109,7 +109,17 @@ def main():
         3: "petal_width",
         4: "label"})
 
-    two_fold_cross_variation_lda(data)
+    # positive class = Versicolor  /  negative class = Virginica
+    positive_class = 2
+    negative_class = 3
+
+    selected_features = data[['petal_length', 'petal_width']]
+    two_fold_cross_variation_lda(data, selected_features, positive_class, negative_class)
+
+    positive_class = 3
+    negative_class = 2
+    selected_features = data[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
+    two_fold_cross_variation_lda(data, selected_features, positive_class, negative_class)
 
 
 if __name__ == '__main__':
