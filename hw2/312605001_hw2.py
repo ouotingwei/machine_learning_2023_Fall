@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import auc
+from collections import defaultdict
 
 
 class LDA():
@@ -17,9 +18,10 @@ class LDA():
         self.b = None
         self.TPR = None
         self.FPR = None
+        self.predicted_list = None
 
 
-    def fit(self, x, y, C):
+    def fit(self, x, y, C=1):
         class_1 = x[y == 1]
         class_2 = x[y == 0]
 
@@ -48,12 +50,14 @@ class LDA():
     def LDA_decision_function(self, x, y_true):
         TP = FP = FN = TN = 0
         x = np.array(x)
+        self.predicted_list = []
 
         for i in range(len(x)):
             x_col = x[i].T
 
             g = self.w_T @ x_col + self.b
             predicted_class = 1 if g > 0 else 0
+            self.predicted_list.append(predicted_class)
 
             if predicted_class == y_true[i] and predicted_class == 1:
                 TP += 1
@@ -73,10 +77,12 @@ class LDA():
     
     def return_TPR_AND_FPR(self):
         return self.TPR, self.FPR
+    
+    def return_predicted_list(self):
+        return self.predicted_list
 
 
 def two_fold_cross_variation_lda(data, selected_features, positive_class, negative_class, C=1):
-
     # adopt the third and forth typees of features
     positive_data = selected_features[data['label'] == positive_class]
     negative_data = selected_features[data['label'] == negative_class]
@@ -124,7 +130,7 @@ def ROC_AND_AUC(data, selected_features, positive_class, negative_class):
     FPR_X = []
     TPR_Y = []
 
-    for exp in range(-1500, 1500, 1): 
+    for exp in range(-1000, 1000, 1): 
         C = 10 ** (exp / 10.0)
 
         lda = LDA()
@@ -146,11 +152,155 @@ def ROC_AND_AUC(data, selected_features, positive_class, negative_class):
     print("AUC = ", roc_auc)
 
     # Plot the ROC curve
-    plt.scatter(FPR_X, TPR_Y)
+    plt.plot(FPR_X, TPR_Y, linestyle='--')
     plt.xlabel('False Positive Rate (FPR_X)')
     plt.ylabel('True Positive Rate (TPR_Y)')
     plt.title('Receiver Operating Characteristic (ROC) Curve')
     plt.show()
+
+
+def vote(list_1, list_2, list_3, real):
+    correct_prediction = 0
+    
+    for i in range(len(list_1)):
+        counts = defaultdict(int)  # Create a dictionary to count occurrences
+        counts[list_1[i]] += 1
+        counts[list_2[i]] += 1
+        counts[list_3[i]] += 1
+
+        max_count = max(counts.values())  # Find the maximum count
+        predicted_value = [key for key, value in counts.items() if value == max_count][0]
+
+        if real[i] == predicted_value:  # Compare the entire array, not individual elements
+            correct_prediction += 1
+    
+    return round(correct_prediction / len(real), 2)
+
+
+def one_against_one_strategy(data):
+    selected_features = data[['petal_length', 'petal_width']]
+
+    class_1 = 1
+    class_2 = 2
+    class_3 = 3
+
+    data_1 = selected_features[data['label'] == class_1]
+    data_2 = selected_features[data['label'] == class_2]
+    data_3 = selected_features[data['label'] == class_3]
+
+    # fold-1
+    # class_1 v.s. class_2 - (1)
+    training_data = pd.concat([data_1.head(25), data_2.head(25)], axis=0)
+    testing_data = pd.concat([data_1.tail(25), data_2.tail(25), data_3.tail(25)], axis=0)
+
+    x_train = training_data
+    y_train = np.concatenate((np.ones(25), np.zeros(25)))
+
+    x_test = testing_data
+    y_test = np.concatenate((np.ones(25), np.zeros(50)))
+
+    lda_1_2 = LDA()
+
+    lda_1_2.fit(x_train, y_train)
+    lda_1_2.LDA_decision_function(x_test, y_test)
+    predicted_1 = lda_1_2.return_predicted_list()
+    predicted_1 = [1 if x == 1 else 2 for x in predicted_1]
+ 
+    # class_1 v.s. class_3 - (1)
+    training_data = pd.concat([data_1.head(25), data_3.head(25)], axis=0)
+    testing_data = pd.concat([data_1.tail(25), data_2.tail(25), data_3.tail(25)], axis=0)
+
+    x_train = training_data
+    y_train = np.concatenate((np.ones(25), np.zeros(25)))
+
+    x_test = testing_data
+    y_test = np.concatenate((np.ones(25), np.zeros(50)))
+
+    lda_1_3 = LDA()
+
+    lda_1_3.fit(x_train, y_train)
+    lda_1_3.LDA_decision_function(x_test, y_test)
+    predicted_2 = lda_1_3.return_predicted_list()
+    predicted_2 = [1 if x == 1 else 3 for x in predicted_2]
+
+    # class_2 v.s. class_3 (1)
+    training_data = pd.concat([data_2.head(25), data_3.head(25)], axis=0)
+    testing_data = pd.concat([data_1.tail(25), data_2.tail(25), data_3.tail(25)], axis=0)
+
+    x_train = training_data
+    y_train = np.concatenate((np.ones(25), np.zeros(25)))
+
+    x_test = testing_data
+    y_test = np.concatenate((np.ones(25), np.zeros(50)))
+
+    lda_2_3 = LDA()
+
+    lda_2_3.fit(x_train, y_train)
+    lda_2_3.LDA_decision_function(x_test, y_test)
+    predicted_3 = lda_2_3.return_predicted_list()
+    predicted_3 = [2 if x == 1 else 3 for x in predicted_3]
+
+    real = np.concatenate((np.ones(25), np.full(25, 2), np.full(25, 3)))
+
+    accuracy_1 = vote(predicted_1, predicted_2, predicted_3, real)
+
+    # fold-2
+    # class_1 v.s. class_2 - (2)
+    training_data = pd.concat([data_1.head(25), data_2.head(25), data_3.head(25)], axis=0)
+    testing_data = pd.concat([data_1.tail(25), data_2.tail(25)], axis=0)
+
+    x_train = training_data
+    y_train = np.concatenate((np.ones(25), np.zeros(50)))
+
+    x_test = testing_data
+    y_test = np.concatenate((np.ones(25), np.zeros(25)))
+
+    lda_1_2 = LDA()
+
+    lda_1_2.fit(x_test, y_test)
+    lda_1_2.LDA_decision_function(x_train, y_train)
+    predicted_1 = lda_1_2.return_predicted_list()
+    predicted_1 = [1 if x == 1 else 2 for x in predicted_1]
+ 
+    # class_1 v.s. class_3 - (1)
+    training_data = pd.concat([data_1.head(25), data_2.head(25), data_3.head(25)], axis=0)
+    testing_data = pd.concat([data_1.tail(25), data_3.tail(25)], axis=0)
+
+    x_train = training_data
+    y_train = np.concatenate((np.ones(25), np.zeros(50)))
+
+    x_test = testing_data
+    y_test = np.concatenate((np.ones(25), np.zeros(25)))
+
+    lda_1_3 = LDA()
+
+    lda_1_3.fit(x_test, y_test)
+    lda_1_3.LDA_decision_function(x_train, y_train)
+    predicted_2 = lda_1_3.return_predicted_list()
+    predicted_2 = [1 if x == 1 else 3 for x in predicted_2]
+
+    # class_2 v.s. class_3 (1)
+    training_data = pd.concat([data_1.head(25), data_2.head(25), data_3.head(25)], axis=0)
+    testing_data = pd.concat([data_2.tail(25), data_3.tail(25)], axis=0)
+
+    x_train = training_data
+    y_train = np.concatenate((np.ones(25), np.zeros(50)))
+
+    x_test = testing_data
+    y_test = np.concatenate((np.ones(25), np.zeros(25)))
+
+    lda_2_3 = LDA()
+
+    lda_2_3.fit(x_test, y_test)
+    lda_2_3.LDA_decision_function(x_train, y_train)
+    predicted_3 = lda_2_3.return_predicted_list()
+    predicted_3 = [2 if x == 1 else 3 for x in predicted_3]
+
+    real = np.concatenate((np.ones(25), np.full(25, 2), np.full(25, 3)))
+
+    accuracy_2 = vote(predicted_1, predicted_2, predicted_3, real)
+
+    print(((accuracy_1 + accuracy_2)/2)*100, "%")
 
 
 def main():
@@ -163,6 +313,7 @@ def main():
         4: "label"})
 
     # Q1 : Use 2-fold cross-validation to calculate the CR value with LDA Classifier
+    print('Q1')
     # positive class = Versicolor  /  negative class = Virginica
     positive_class = 2
     negative_class = 3
@@ -174,26 +325,30 @@ def main():
     print('--------------------------------')
 
     # Q2 : Plot the ROC and calculate the AUC scores
+    print('Q2')
     # positive class = Virginica  /  negative class = Versicolor
     positive_class = 3
     negative_class = 2
 
-    print('Q2 Feature = sepal_length, sepal_width, petal_length, petal_width')
+    print('Feature = sepal_length, sepal_width, petal_length, petal_width')
     # Used all features
     selected_features = data[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
     ROC_AND_AUC(data, selected_features, positive_class, negative_class)
 
     # Use sepal_length & sepal_width
-    print('Q2  Feature = sepal_length, sepal_width')
+    print('Feature = sepal_length, sepal_width')
     selected_features = data[['sepal_length', 'sepal_width']]
     ROC_AND_AUC(data, selected_features, positive_class, negative_class)
 
     # Use petal_length & petal_width
-    print('Q2 Feature = petal_length, petal_width')
+    print('Feature = petal_length, petal_width')
     selected_features = data[['petal_length', 'petal_width']]
     ROC_AND_AUC(data, selected_features, positive_class, negative_class)
+    print('--------------------------------')
 
     # Q3 : One against one strategy
+    print('Q3')
+    one_against_one_strategy(data)
 
 
 if __name__ == '__main__':
