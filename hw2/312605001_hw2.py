@@ -5,10 +5,9 @@ Machien Learning HW2 ( NYCU FALL-2023 )
 """
 import pandas as pd
 import numpy as np
-import math
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import auc
+
 
 class LDA():
     def __init__(self):
@@ -106,6 +105,7 @@ def two_fold_cross_variation_lda(data, selected_features, positive_class, negati
     print('testing w = ', testing_w, 'testing b = ', testing_b,'training accuracy', training_accuracy, '%')
     print('average accuracy = ', average_accuracy, '%')
 
+
 def ROC_AND_AUC(data, selected_features, positive_class, negative_class):
     # adopt the third and forth typees of features
     positive_data = selected_features[data['label'] == positive_class]
@@ -124,7 +124,7 @@ def ROC_AND_AUC(data, selected_features, positive_class, negative_class):
     FPR_X = []
     TPR_Y = []
 
-    for exp in range(-500, 600, 1): 
+    for exp in range(-1500, 1500, 1): 
         C = 10 ** (exp / 10.0)
 
         lda = LDA()
@@ -140,6 +140,10 @@ def ROC_AND_AUC(data, selected_features, positive_class, negative_class):
         FPR_X.append((FPR_test + FPR_train)/2)
 
         # print((TPR_test + TPR_train)/2, (FPR_test + FPR_train)/2)
+
+    roc_auc = auc(FPR_X, TPR_Y)
+
+    print("AUC = ", roc_auc)
 
     # Plot the ROC curve
     plt.scatter(FPR_X, TPR_Y)
@@ -174,15 +178,18 @@ def main():
     positive_class = 3
     negative_class = 2
 
+    print('Q2 Feature = sepal_length, sepal_width, petal_length, petal_width')
     # Used all features
     selected_features = data[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
     ROC_AND_AUC(data, selected_features, positive_class, negative_class)
 
     # Use sepal_length & sepal_width
+    print('Q2  Feature = sepal_length, sepal_width')
     selected_features = data[['sepal_length', 'sepal_width']]
     ROC_AND_AUC(data, selected_features, positive_class, negative_class)
 
     # Use petal_length & petal_width
+    print('Q2 Feature = petal_length, petal_width')
     selected_features = data[['petal_length', 'petal_width']]
     ROC_AND_AUC(data, selected_features, positive_class, negative_class)
 
