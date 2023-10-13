@@ -174,7 +174,7 @@ def vote(list_1, list_2, list_3, real):
         if real[i] == predicted_value:  # Compare the entire array, not individual elements
             correct_prediction += 1
     
-    return round(correct_prediction / len(real), 2)
+    return round(correct_prediction / len(real), 4)
 
 
 def one_against_one_strategy(data):
@@ -217,6 +217,7 @@ def one_against_one_strategy(data):
     y_test = np.concatenate((np.ones(25), np.zeros(50)))
 
     lda_1_3 = LDA()
+    
 
     lda_1_3.fit(x_train, y_train)
     lda_1_3.LDA_decision_function(x_test, y_test)
@@ -243,6 +244,7 @@ def one_against_one_strategy(data):
     real = np.concatenate((np.ones(25), np.full(25, 2), np.full(25, 3)))
 
     accuracy_1 = vote(predicted_1, predicted_2, predicted_3, real)
+    print('fold-1 = ', 100*accuracy_1, '%')
 
     # fold-2
     # class_1 v.s. class_2 - (2)
@@ -299,8 +301,9 @@ def one_against_one_strategy(data):
     real = np.concatenate((np.ones(25), np.full(25, 2), np.full(25, 3)))
 
     accuracy_2 = vote(predicted_1, predicted_2, predicted_3, real)
+    print('fold-2 = ', 100*accuracy_2, '%')
 
-    print(((accuracy_1 + accuracy_2)/2)*100, "%")
+    print('average = ',((accuracy_1 + accuracy_2)/2)*100, "%")
 
 
 def main():
