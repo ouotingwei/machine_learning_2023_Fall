@@ -40,9 +40,10 @@ class SVM():
         if self.kernel_type == 'linear':
             k = x @ y
         elif self.kernel_type == 'rbf':
-            ...
+            norm_sq_neg = -1 * ( np.linalg.norm(x - y) ** 2 )
+            k = math.exp(norm_sq_neg / (2 * (self.p ** 2)))
         elif self.kernel_type == 'polynomial':
-            ...
+            k = pow(x @ y, self.sigma)
         return k
     
     def solve_parameters(self):
@@ -51,32 +52,35 @@ class SVM():
         lb = np.full(n, 0)
         ub = np.full(n, self.C)
 
-        P = np.zeros((n, n))
+        P = scipy.sparse.lil_matrix((n, n))
         for i in range(n):
             for j in range(n):
                 k = self.kernel_function(self.x_train[i], self.x_train[j])
-                P[i][j] = self.y_train[i] * self.y_train[j] * k       
-                
+                P[i, j] = self.y_train[i] * self.y_train[j] * k
+
+        P = P.tocsc()  # transfer into csc_matrix
+
         q = np.full(n, -1).T
         A = self.y_train
+        A = scipy.sparse.csc_matrix(A)
         b = np.array([0])
 
         # use qpsolvers to solve alpha
-        alpha = solve_qp(P, q,None,None,A , b, lb, ub, solver="clarabel")
+        alpha = solve_qp(P, q, None, None, A, b, lb, ub, solver="clarabel")
 
         # handling alpha values
-        eps =   2.2204e-16
+        eps = 2.2204e-16
         for i in range(alpha.size):
             if alpha[i] >= self.C - np.sqrt(eps):
                 alpha[i] = self.C
-                alpha[i] = np.round(alpha[i],6)
+                alpha[i] = np.round(alpha[i], 6)
             elif alpha[i] <= 0 + np.sqrt(eps):
                 alpha[i] = 0
-                alpha[i] = np.round(alpha[i],6)
+                alpha[i] = np.round(alpha[i], 6)
             else:
-                alpha[i] = np.round(alpha[i],6)
-                print(f"support vector: alpha = {alpha[i]}")
-        
+                alpha[i] = np.round(alpha[i], 6)
+                #print(f"support vector: alpha = {alpha[i]}")
+
         self.alpha = alpha
         self.alpha_sum = np.round(np.sum(self.alpha), 4)
 
@@ -84,7 +88,7 @@ class SVM():
         sum = 0
         b_list = []
 
-        for i in range(len(self.alpha)): 
+        for i in range(len(self.alpha)):
             if self.alpha[i] > 0 and self.alpha[i] < self.C:
                 sum = 0
                 for j in range(len(self.alpha)):
@@ -94,7 +98,8 @@ class SVM():
 
                 b_list.append(bias)
         self.b = np.mean(np.array(b_list))
-        print(self.b)
+        #print(self.b)
+
 
     def CR(self):
         predict = []
@@ -111,7 +116,7 @@ class SVM():
 
         correct = np.sum(predict == self.y_test)
         accuracy = correct / len(self.x_test)
-        print(f"Classification Rate (CR): {accuracy * 100:.2f}%")
+        print(f"Mode: {self.kernel_type} , Classification Rate (CR): {accuracy * 100:.2f}%")
 
 
     def auto_execute(cls, data, selected_features, positive_class, negative_class, kernel_type='linear', C=1, sigma_p=1):
@@ -134,13 +139,38 @@ def main():
     negative_class = 3
     selected_features = data[['petal_length', 'petal_width']]
 
-    # linear svm with c = 1
+    # part 1
+    # linear kernel-based svm with c = 1
     SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'linear', C=1)
-    # linear svm with c = 10
+    # linear kernel-based svm with c = 10
     SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'linear', C=10)
-    # linear svm with c = 100
+    # linear kernek-based svm with c = 100
     SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'linear', C=100)
 
-    
+    # part 2
+    # RBF kernel-based svm with C = 10, sigma = 5
+    SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'rbf', C=10, sigma_p=5)
+    # RBF kernel-based svm with C = 10, sigma = 1
+    SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'rbf', C=10, sigma_p=1)
+    # RBF kernel-based svm with C = 10, sigma = 0.5
+    SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'rbf', C=10, sigma_p=0.5)
+    # RBF kernel-based svm with C = 10, sigma = 0.1
+    SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'rbf', C=10, sigma_p=0.1)
+    # RBF kernel-based svm with C = 10, sigma = 0.05
+    SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'rbf', C=10, sigma_p=0.05)
+
+    # part 3
+    # Polynomial kernel-based svm with C = 10, P = 1
+    SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'polynomial', C=10, sigma_p=1)
+    # Polynomial kernel-based svm with C = 10, P = 2
+    SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'polynomial', C=10, sigma_p=2)
+    # Polynomial kernel-based svm with C = 10, P = 3
+    SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'polynomial', C=10, sigma_p=3)
+    # Polynomial kernel-based svm with C = 10, P = 4
+    SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'polynomial', C=10, sigma_p=4)
+    # Polynomial kernel-based svm with C = 10, P = 5
+    SVM.auto_execute(SVM, data, selected_features, positive_class, negative_class, 'polynomial', C=10, sigma_p=5)
+
+
 if __name__ == '__main__':
     main()
