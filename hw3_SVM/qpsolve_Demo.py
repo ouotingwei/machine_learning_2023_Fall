@@ -81,6 +81,9 @@ class SVM():
                 alpha[i] = np.round(alpha[i], 6)
                 #print(f"support vector: alpha = {alpha[i]}")
 
+        print_alpha = np.round(alpha, 4)
+        print('alpha = ', print_alpha)
+
         self.alpha = alpha
         self.alpha_sum = np.round(np.sum(self.alpha), 4)
 
@@ -97,8 +100,10 @@ class SVM():
                 bias = 1.0 / self.y_train[i] - sum
 
                 b_list.append(bias)
+        
         self.b = np.mean(np.array(b_list))
-        #print(self.b)
+
+        print('b = ', np.round(b_list, 4))
 
 
     def CR(self):
@@ -117,6 +122,7 @@ class SVM():
         correct = np.sum(predict == self.y_test)
         accuracy = correct / len(self.x_test)
         print(f"Mode: {self.kernel_type} , Classification Rate (CR): {accuracy * 100:.2f}%")
+        print('----------------------------------------------------------------')
 
 
     def auto_execute(cls, data, selected_features, positive_class, negative_class, kernel_type='linear', C=1, sigma_p=1):
