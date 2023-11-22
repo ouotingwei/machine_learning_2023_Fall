@@ -1,0 +1,2 @@
+
+-DCATKIN_DEVEL_PREFIX=/home/tingweiou/radar_localization/devel -DCMAKE_INSTALL_PREFIX=/home/tingweiou/radar_localization/install -G Unix Makefiles
