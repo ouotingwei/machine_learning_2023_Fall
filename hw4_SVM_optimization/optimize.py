@@ -13,10 +13,15 @@ def vote(list_1, list_2, list_3, real):
         counts[list_3[i]] += 1
 
         max_count = max(counts.values())  # Find the maximum count
-        predicted_value = [key for key, value in counts.items() if value == max_count][0]
+        predicted_values = [key for key, value in counts.items() if value == max_count]
 
-        if real[i] == predicted_value:  # Compare the entire array, not individual elements
-            correct_prediction += 1
+        if len(predicted_values) == 1:
+            predicted_value = predicted_values[0]
+
+            if real[i] == predicted_value:  # Compare the entire array, not individual elements
+                correct_prediction += 1
+        else:
+            pass
     
     return round(correct_prediction / len(real), 4)
 
@@ -39,11 +44,15 @@ def main():
     best_sigma = None
     
     # search range
-    C_list = [1, 5, 10, 50, 100, 500, 1000]
-    sigma_list = [1.05**(-i) for i in range(100, -100, -5)]
+    #C_list = [1, 5, 10, 50, 100, 500, 1000]
+    #sigma_list = [1.05**(-i) for i in range(100, -100, -5)]
 
-    #C_list = [1, 5]
-    #sigma_list = [1.05**-100, 1.05**-95]
+    selected_data = data.groupby('label').apply(lambda x: x.tail(25)).reset_index(drop=True)
+    selected_data = selected_data.drop(columns=['label'])
+    x_test = selected_data.to_numpy()
+
+    C_list = [1]
+    sigma_list = [1.05**100]
     
     # choose all fratures 
     selected_features = data[['sepal_length', 'sepal_width','petal_length', 'petal_width']]
@@ -56,7 +65,8 @@ def main():
     data_2 = selected_features[data['label'] == class_2]
     data_3 = selected_features[data['label'] == class_3]
 
-    real = np.concatenate((np.ones(25), np.full(25, 2), np.full(25, 3)))
+    real = [i for i in range(1, 4) for _ in range(25)]
+
 
     for c in C_list:
         for sigma in sigma_list:
@@ -68,10 +78,13 @@ def main():
             x_train = training_data.values
             y_train = np.concatenate((np.ones(25), -np.ones(25)))
 
-            x_test = testing_data.values
             y_test = np.concatenate((np.ones(25), -np.ones(50)))
 
-            predict_1 = SVM.auto_execute(SVM, x_train, y_train, x_test, y_test, 'rbf', C = c, sigma_p = sigma)
+            obj_1 = SVM(x_train, y_train, x_test, y_test, kernel_type='rbf', C=c, sigma_p=sigma)
+            obj_1.solve_parameters()
+            predict_1 = obj_1.predict()
+
+            #print(predict_1)
 
             # reform the list
             for i in range(len(predict_1)):
@@ -87,10 +100,13 @@ def main():
             x_train = training_data.values
             y_train = np.concatenate((np.ones(25), -np.ones(25)))
 
-            x_test = testing_data.values
             y_test = np.concatenate((np.ones(25), -np.ones(50)))
 
-            predict_2 = SVM.auto_execute(SVM, x_train, y_train, x_test, y_test, 'rbf', C = c, sigma_p = sigma)
+            obj_2 = SVM(x_train, y_train, x_test, y_test, kernel_type='rbf', C=c, sigma_p=sigma)
+            obj_2.solve_parameters()
+            predict_2 = obj_2.predict()
+
+            #print(predict_1)
 
             # reform the list
             for i in range(len(predict_2)):
@@ -98,6 +114,8 @@ def main():
                     predict_2[i] = class_2
                 if predict_2[i] == -1:
                     predict_2[i] = class_3
+
+            #print(predict_2)
                     
             # svm13
             training_data = pd.concat([data_1.head(25), data_3.head(25)], axis=0)
@@ -106,10 +124,12 @@ def main():
             x_train = training_data.values
             y_train = np.concatenate((np.ones(25), -np.ones(25)))
 
-            x_test = testing_data.values
             y_test = np.concatenate((np.ones(25), -np.ones(50)))
 
-            predict_3 = SVM.auto_execute(SVM, x_train, y_train, x_test, y_test, 'rbf', C = c, sigma_p = sigma)
+            obj_3 = SVM(x_train, y_train, x_test, y_test, kernel_type='rbf', C=c, sigma_p=sigma)
+            obj_3.solve_parameters()
+            predict_3 = obj_3.predict()
+            #print(predict_3)
 
             # reform the list
             for i in range(len(predict_3)):
@@ -121,6 +141,7 @@ def main():
             accuracy_fold1 = vote(predict_1, predict_2, predict_3, real)
             #print('fold-1 = ', 100*accuracy_fold1, '%')
 
+            '''
             # fold 2
             # svm12
             training_data = pd.concat([data_1.tail(25), data_2.tail(25)], axis=0)
@@ -178,11 +199,13 @@ def main():
                     predict_3[i] = class_1
                 if predict_3[i] == -1:
                     predict_3[i] = class_3
+            
 
             accuracy_fold2 = vote(predict_1, predict_2, predict_3, real)
             #print('fold-2 = ', 100 * accuracy_fold2, '%')
+            '''
 
-            accuracy = (accuracy_fold1 + accuracy_fold2) / 2
+            accuracy = (accuracy_fold1) #+ accuracy_fold2) / 2
 
             if accuracy > best_accuracy:
                 best_accuracy = accuracy
@@ -193,14 +216,23 @@ def main():
             sigma_values.append(round(sigma, 4))
             accuracy_values.append(f'{accuracy:.2%}')
 
-    table_data = {'C': c_values, 'Sigma': sigma_values, 'Accuracy': accuracy_values}
-    table_df = pd.DataFrame(table_data)
-
-    table_df.to_csv('/home/weiwei-robotic/machine_learning_2023_Fall/hw4_SVM_optimization/result.csv', index=False)
 
     print(f"Best CR: {best_accuracy:.2%}")
     print(f"c: {best_c}")
     print(f"sigma: {best_sigma}")
+
+    result_df = pd.DataFrame({
+        'C': c_values,
+        'sigma': sigma_values,
+        'Accuracy': accuracy_values
+    })
+
+    result_df.set_index(['C', 'sigma'], inplace=True)
+    result_df.sort_index(inplace=True)
+
+    result_pivot = result_df.pivot_table(values='Accuracy', index='sigma', columns='C', aggfunc='first')
+
+    print(result_pivot)
 
                     
 
