@@ -158,9 +158,13 @@ def vote(list_1, list_2, list_3, real):
             if real[i] == predicted_value:  # Compare the entire array, not individual elements
                 correct_prediction += 1
         else:
-            pass
+            return 0  # If there is a tie in the voting, return 0
     
-    return round(correct_prediction / len(real), 4)
+    if round(correct_prediction / len(real), 4) < 0.35:
+        return 0
+    else:
+        return round(correct_prediction / len(real), 4)
+
 
 
 def main():
@@ -175,6 +179,8 @@ def main():
     c_values = []
     sigma_values = []
     accuracy_values = []
+    accuracy_values_1 = []
+    accuracy_values_2 = []
 
     best_accuracy = 0  
     best_c = None
@@ -263,6 +269,8 @@ def main():
             accuracy_fold1 = vote(predict_1, predict_2, predict_3, real)
             #print(accuracy_fold1*100)
 
+            accuracy_values_1.append(accuracy_fold1)
+
             # fold 2
             # testing_data
             selected_data = data.groupby('label').apply(lambda x: x.head(25)).reset_index(drop=True)
@@ -332,6 +340,8 @@ def main():
             accuracy_fold2 = vote(predict_1, predict_2, predict_3, real)
             #print(accuracy_fold2*100)
 
+            accuracy_values_2.append(accuracy_fold2)
+
             accuracy = (accuracy_fold1 + accuracy_fold2) / 2
 
             if accuracy > best_accuracy:
@@ -346,6 +356,9 @@ def main():
     print(f"Best CR: {best_accuracy:.2%}")
     print(f"c: {best_c}")
     print(f"sigma: {best_sigma}")
+
+    print("fold 1 accuracy = ", max(accuracy_values_1)*100)
+    print("fold 2 accuracy = ", max(accuracy_values_2)*100)
 
     result_df = pd.DataFrame({
         'C': c_values,
