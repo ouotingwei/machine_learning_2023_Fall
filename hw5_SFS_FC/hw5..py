@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 import numpy as np
 from sklearn.model_selection import train_test_split
-import lda 
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 
 # SFS
 def sequential_forward_selection_2fold(X, y):
@@ -26,14 +26,16 @@ def sequential_forward_selection_2fold(X, y):
             current_features = [feature for feature in current_features if feature is not None]
             fold1_X, fold2_X, fold1_y, fold2_y = train_test_split(X[:, np.array(current_features).astype(int)], y, test_size=0.5, random_state=0)
 
-            # Evaluate the model on the first fold
-            lda_ = lda.LDA()
-            lda_.fit(fold1_X, fold1_y)
-            fold_1_accuracy = lda_.LDA_decision_function(fold2_X, fold2_y) * 100
+            # Initialize LDA
+            lda_ = LDA()
 
-            # Evaluate the model on the second fold
+            # Fit and evaluate the model on the first fold
+            lda_.fit(fold1_X, fold1_y)
+            fold_1_accuracy = lda_.score(fold2_X, fold2_y) * 100
+
+            # Fit and evaluate the model on the second fold
             lda_.fit(fold2_X, fold2_y)
-            fold_2_accuracy = lda_.LDA_decision_function(fold1_X, fold1_y) * 100
+            fold_2_accuracy = lda_.score(fold1_X, fold1_y) * 100
 
             # Calculate the average accuracy
             accuracy = (fold_1_accuracy + fold_2_accuracy) / 2
@@ -101,22 +103,26 @@ def fisher_criterion_2fold(X, y, k=30):
     for i in range(1, k + 1):
         selected_features = X[:, top_k_indices[:i]]
 
-
+        # Split the data into two folds for each iteration
         fold1_X, fold2_X, fold1_y, fold2_y = train_test_split(selected_features, y, test_size=0.5, random_state=0)
 
-        lda_ = lda.LDA()
-        lda_.fit(fold1_X, fold1_y)
-        fold_1_accuracy = lda_.LDA_decision_function(fold2_X, fold2_y) * 100
+        # Initialize LDA
+        lda_ = LDA()
 
+        # Fit and evaluate the model on the first fold
+        lda_.fit(fold1_X, fold1_y)
+        fold_1_accuracy = lda_.score(fold2_X, fold2_y) * 100
+
+        # Fit and evaluate the model on the second fold
         lda_.fit(fold2_X, fold2_y)
-        fold_2_accuracy = lda_.LDA_decision_function(fold1_X, fold1_y) * 100
+        fold_2_accuracy = lda_.score(fold1_X, fold1_y) * 100
 
         accuracy = (fold_1_accuracy + fold_2_accuracy) / 2
 
         print(f"Top {i} features, Accuracy: {accuracy}")
-        
 
     return top_k_indices, top_k_scores
+
         
     
 def main():
