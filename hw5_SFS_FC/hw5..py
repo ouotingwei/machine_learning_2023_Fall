@@ -61,6 +61,7 @@ def sequential_forward_selection_2fold(X, y):
 
 
 def fisher_criterion_2fold(X, y, k=30):
+
     print("------------------------Fisher's Criterion-----------------------------")
 
     pos_len = len(X[y == 1])
@@ -87,20 +88,25 @@ def fisher_criterion_2fold(X, y, k=30):
     for i in np.unique(y):
         Sb += len(X[y == i]) * (mean_vectors[i] - mean) @ (mean_vectors[i] - mean).T
 
-    # calculate Fisher's scores
-    F_scores = np.diag(np.linalg.inv(Sw) @ Sb)
+        # calculate Fisher's scores
+        F_scores = np.diag(np.linalg.inv(Sw) @ Sb)
 
-    # sort indices based on F-scores in descending order
-    sorted_indices = np.argsort(F_scores)[::-1]
+        # sort indices based on F-scores in descending order
+        sorted_indices = np.argsort(F_scores)[::-1]
 
-    # get top k indices and their corresponding F-scores
-    top_k_indices = sorted_indices[:k]
-    top_k_scores = F_scores[top_k_indices]
+        # get top k indices and their corresponding F-scores
+        top_k_indices = sorted_indices[:k]
+        top_k_scores = F_scores[top_k_indices]
 
-    # print top k indices and their corresponding F-scores
-    print(f"Top {k} indices: {top_k_indices}")
+        # print top k indices and their corresponding F-scores
+        # print(f"Top {k} indices: {top_k_indices}")
 
-    for i in range(1, k + 1):
+    # Initialize variables to store information about the best accuracy
+    best_accuracy = 0
+    best_selected_features = None
+
+    # Loop through the top k features
+    for i in range(1, min(k, len(top_k_indices)) + 1):
         selected_features = X[:, top_k_indices[:i]]
 
         # Split the data into two folds for each iteration
@@ -119,7 +125,17 @@ def fisher_criterion_2fold(X, y, k=30):
 
         accuracy = (fold_1_accuracy + fold_2_accuracy) / 2
 
-        print(f"Top {i} features, Accuracy: {accuracy}")
+        print(f" Top {i} features, Selected Feature = {top_k_indices[i-1]},  Accuracy: {accuracy}")
+
+        # Update the best accuracy and selected features if a new best is found
+        if accuracy > best_accuracy:
+            best_accuracy = accuracy
+            best_selected_features = selected_features
+
+    # Print the best accuracy and corresponding features
+    print(" [-] Best Accuracy:", best_accuracy)
+    print(" [-] Selected Features for Best Accuracy:", top_k_indices[:best_selected_features.shape[1]])
+
 
     return top_k_indices, top_k_scores
 
